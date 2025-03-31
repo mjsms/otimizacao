@@ -8,11 +8,11 @@ from pulp import LpProblem, LpMinimize, LpVariable, lpSum, value, LpStatus
 # -------------------------
 armazens = ["A1", "A2"]
 centros = ["CD1", "CD2", "CD3"]
-oferta = {"A1": 300, "A2": 500}
+oferta = {"A1": 700, "A2": 700}
 procura = {"CD1": 200, "CD2": 250, "CD3": 250}
 custo_inicial = {
-    ("A1","CD1"): 2.0, ("A1","CD2"): 3.5, ("A1","CD3"): 3.0,
-    ("A2","CD1"): 2.5, ("A2","CD2"): 2.0, ("A2","CD3"): 4.0
+    ("A1","CD1"): 3.0,  ("A1","CD2"): 4.0,  ("A1","CD3"): 3.5,
+    ("A2","CD1"): 5.5,  ("A2","CD2"): 3.5, ("A2","CD3"): 4.5
 }
 
 # Criar modelo

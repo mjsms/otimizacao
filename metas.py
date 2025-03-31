@@ -16,13 +16,13 @@ procura = {"CD1": 200, "CD2": 250, "CD3": 250}
 
 # Custos: A1 é barato, A2 é bem mais caro, para criar conflito real
 custo = {
-    ("A1","CD1"): 2.0,  ("A1","CD2"): 3.0,  ("A1","CD3"): 2.5,
-    ("A2","CD1"): 5.0,  ("A2","CD2"): 5.5, ("A2","CD3"): 6.0
+    ("A1","CD1"): 3.0,  ("A1","CD2"): 4.0,  ("A1","CD3"): 3.5,
+    ("A2","CD1"): 5.5,  ("A2","CD2"): 3.5, ("A2","CD3"): 4.5
 }
 
 # Metas:
 #   1) Custo total ≤ 2500
-#   2) Expedir de A2 ≈ 400 (penalizando desvios para mais e para menos)
+#   2) Expedir de A2 ≈ 300 (penalizando desvios para mais e para menos)
 model = LpProblem("ProgMetas", LpMinimize)
 
 # Variáveis de transporte
@@ -41,8 +41,8 @@ cost_expr = lpSum(custo[(i,j)] * x[(i,j)] for i in armazens for j in centros)
 # Meta 1: cost_expr + d1_minus - d1_plus = 2500
 model += cost_expr + d1_minus - d1_plus == 2500, "MetaCusto"
 
-# Meta 2: sum(A2->CDs) + d2_minus - d2_plus = 400
-model += lpSum(x[("A2",j)] for j in centros) + d2_minus - d2_plus == 400, "MetaA2"
+# Meta 2: sum(A2->CDs) + d2_minus - d2_plus = 300
+model += lpSum(x[("A2",j)] for j in centros) + d2_minus - d2_plus == 300, "MetaA2"
 
 # Restrições de oferta e procura
 model += lpSum(x[("A1",j)] for j in centros) <= oferta["A1"], "CapA1"
@@ -53,7 +53,7 @@ for c in centros:
 # Função objetivo: penalizar exceder ou ficar aquém da meta de A2
 # e também penalizar ultrapassar a meta de custo
 w1, w2 = 1, 1
-model += w1*d1_plus + w2*(d2_minus + d2_plus), "ObjMetas"
+model += w1*d1_plus + w2*d2_minus, "ObjMetas"
 
 model.solve()
 
@@ -63,6 +63,7 @@ custo_total = value(cost_expr)
 expA2 = value(lpSum(x[("A2",j)] for j in centros))
 print(f"Custo Total: {custo_total:.2f} €")
 print(f"Expedição de A2: {expA2:.0f} caixas")
+print(f"Pesos: w1 = {w1}, w2 = {w2}")
 
 # Extrair quantidades para cada centro
 distA1 = [value(x[("A1",cd)]) for cd in centros]
@@ -103,7 +104,7 @@ for w2test in w2_values:
     # Meta 1
     m2 += cost_expr2 + d1m - d1p == 2500
     # Meta 2
-    m2 += lpSum(x2[("A2",cd)] for cd in centros) + d2m - d2p == 400
+    m2 += lpSum(x2[("A2",cd)] for cd in centros) + d2m - d2p == 300
 
     m2 += lpSum(x2[("A1",cd)] for cd in centros) <= oferta["A1"]
     m2 += lpSum(x2[("A2",cd)] for cd in centros) <= oferta["A2"]
@@ -111,7 +112,7 @@ for w2test in w2_values:
         m2 += lpSum(x2[(i,c)] for i in armazens) == procura[c]
 
     # função objetivo penaliza d1p e (d2m + d2p)
-    m2 += 1 * d1p + w2test * (d2m + d2p)
+    m2 += 1 * d1p + w2test * d2m
     m2.solve()
 
     expA2_sens = value(lpSum(x2[("A2",cd)] for cd in centros))
